@@ -17,7 +17,8 @@ class AnimeGANDiscriminator(nn.Module):
         )
     
     def forward(self, x):
-        return self.seq(x)
+        x = self.seq(x)
+        return torch.sigmoid(x)
 
 if __name__=="__main__":
     x = torch.randn((8, 3, 256, 256))

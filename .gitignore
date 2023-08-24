@@ -2,5 +2,7 @@ dataset/__pycache__
 dataset/__init__.py
 model/__pycache__
 model/__init__.py
+config/__init__.py
+code.ipynb
 images/*
 videos/*

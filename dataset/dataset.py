@@ -2,7 +2,7 @@ import os
 from glob import glob
 import numpy as np
 from PIL import Image
-import torch
+from torch import nn
 from torch.utils.data import DataLoader, Dataset
 from torchvision import transforms
 import pytorch_lightning as pl
@@ -42,17 +42,24 @@ class MainDataset(Dataset):
         return input_img, target_img, blurred_img
 
 class AnimeGANDataset(pl.LightningDataModule):
-    def __init__(self, batch_size, num_workers, transform):
+    def __init__(self, 
+                 batch_size, 
+                 num_workers, 
+                 transform, 
+                 input_dir="images/Input/", 
+                 target_dir="images/Target/"):
         super().__init__()
         self.batch_size = batch_size
         self.num_workers = num_workers
         self.transform = transform
+        self.input_dir = input_dir
+        self.target_dir = target_dir
 
     def setup(self, stage):
         # done on multiple GPU
         entire_dataset = MainDataset(
-            input_dir  = "images/Input/",
-            target_dir = "images/Target/",
+            input_dir  = self.input_dir,
+            target_dir = self.target_dir,
             transform = self.transform
         )
         self.train_ds = entire_dataset
@@ -64,3 +71,16 @@ class AnimeGANDataset(pl.LightningDataModule):
             num_workers=self.num_workers,
             shuffle=True
         )
+
+class TransformsModule(nn.Module):
+    def __init__(self, target_size=(256, 256)):
+        super().__init__()
+        self.transform = transforms.Compose(
+            [
+            transforms.Resize(target_size),
+            transforms.ToTensor()
+            ]
+        )
+    
+    def forward(self, x):
+        return self.transform(x)
