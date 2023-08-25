@@ -40,8 +40,10 @@ def train():
         min_epochs=1, 
         max_epochs=config.NUM_EPOCHS,
         logger=logger,
-        gpus=[0, 1],
-        distributed_backend='dp'
+        accelerator="cpu",
+        # accelerator="gpu",
+        # devices=[0, 1],
+        # strategy='ddp_find_unused_parameters_true'
     )
     trainer.fit(model, loader)
 

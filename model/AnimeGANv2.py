@@ -5,6 +5,8 @@ from torch import nn
 import torch.optim as optim
 import torchvision
 from torchvision.utils import make_grid
+from torchvision.models.vgg import VGG19_Weights
+from torchvision.models import vgg19
 import torch.nn.functional as F
 
 import pytorch_lightning as pl
@@ -30,13 +32,13 @@ class AnimeGANv2_LightningSystem(pl.LightningModule):
         self.w_con = w_con
         self.w_col = w_col
 
-        vgg19 = torchvision.models.vgg19(pretrained=True).features[:26]
+        vgg19 = torchvision.models.vgg19(weights=VGG19_Weights.IMAGENET1K_V1).features[:26]
         for param in vgg19.parameters():
             param.requires_grad = False 
         self.vgg = vgg19
         self.vgg.eval()  # Set to evaluation mode
 
-        self.mse = nn.MSELoss()
+        self.mse = MeanSquaredError()
         self.mae = nn.L1Loss()
         self.huber = nn.HuberLoss()
 
@@ -97,6 +99,7 @@ class AnimeGANv2_LightningSystem(pl.LightningModule):
         ### Optimize Generator
 
         # Adversarial Loss
+        fake_T = self.gen(I)
         D_fake = self.disc(fake_T)
         G_adv_loss = self.mse(D_fake, torch.ones_like(D_fake))
 
@@ -135,11 +138,21 @@ class AnimeGANv2_LightningSystem(pl.LightningModule):
         self.manual_backward(G_loss)
         gen_opt.step()
         losses = {
-            "d_loss": D_adv_loss,
-            "g_loss": G_loss
+            "d_l": D_adv_loss,
+            "g_a": G_adv_loss,
+            "g_gr": G_greyscale_loss,
+            "g_c": G_content_loss,
+            "g_cl": G_color_loss,
         }
 
         self.log_dict(losses, prog_bar=True)
     
     def forward(self, x):
         return self.gen(x)
+    
+    def on_save_checkpoint(self, checkpoint) -> None:
+        checkpoint['gen_weights'] = self.gen.state_dict()
+
+    def on_load_checkpoint(self, checkpoint) -> None:
+        if 'gen_weights' in checkpoint:
+            self.gen.load_state_dict(checkpoint['gen_weights'])
