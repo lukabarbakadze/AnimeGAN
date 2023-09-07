@@ -3,7 +3,7 @@ import os
 from glob import glob
 import cv2
 
-input_dir = "images/Targer"
+input_dir = "images/Target"
 output_dir = "images/GrayScale"
 
 def overlayEdges(edges, origin):

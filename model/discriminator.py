@@ -21,7 +21,7 @@ class AnimeGANDiscriminator(nn.Module):
         return torch.sigmoid(x)
 
 if __name__=="__main__":
-    x = torch.randn((8, 3, 256, 256))
+    x = torch.randn((4, 3, 256, 256))
     model = AnimeGANDiscriminator()
     out = model(x)
     print(out.shape)
